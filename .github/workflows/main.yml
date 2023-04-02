@@ -4,7 +4,7 @@ env:
   EB_PACKAGE_S3_BUCKET_NAME: "bkukl-github-actions"
   EB_APPLICATION_NAME      : "MyFlask"
   EB_ENVIROMENT_NAME       : "MyFlask-env"
-  DEPLOY_PACKAGE_NAME      : "flask_app${{ github.sha }}.zip"
+  DEPLOY_PACKAGE_NAME      : "flask_app_${{ github.sha }}.zip"
   AWS_REGION_NAME          : "eu-centraal-1"
 
 on:
@@ -13,18 +13,19 @@ on:
       - main
 
 jobs:
-  build:
-    
+  my-ci-part:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Git clone repo
-    - uses: actions/checkout@v2
+    - name: Git clone our repo
+      uses: actions/checkout@v1
     
-    - name:  Create zip deployment package
+    - name: Create ZIP deployment package
       run : zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
-      
-    
-    
-    
-    
+
+    - name: Configure my AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id    :  ${{ secrets.MY_AWS_ACCESS_KEY }}
+        aws-secret-access-key:  ${{ secrets.MY_AWS_SECRET_KEY }}
+        aws-region           :  ${{ env.AWS_REGION_NAME }}
