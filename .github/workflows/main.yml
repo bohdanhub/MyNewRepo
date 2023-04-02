@@ -2,8 +2,8 @@ name: First-CI/CD-Action-Elastic-Beanstoalk
 
 env:
   EB_PACKAGE_S3_BUCKET_NAME: "bkukl-github-actions"
-  EB_APPLICATION_NAME      : "MyFlask"
-  EB_ENVIROMENT_NAME       : "MyFlask-env"
+  EB_APPLICATION_NAME      : "bkukl-github-application"
+  EB_ENVIROMENT_NAME       : "Bkukl-github-application-env"
   DEPLOY_PACKAGE_NAME      : "flask_app_${{ github.sha }}.zip"
   AWS_REGION_NAME          : "eu-central-1"
 
@@ -34,3 +34,27 @@ jobs:
       
     - name: Print Happy Message for CI finish
       run : echo "CI Pipeline part Finished successfully!"
+
+
+  my_cd_part:
+    runs-on: ubuntu-latest
+    needs: [my-ci-part]
+    
+    steps:
+    - name: Configure my AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id    :  ${{ secrets.MY_AWS_ACCESS_KEY }}
+        aws-secret-access-key:  ${{ secrets.MY_AWS_SECRET_KEY }}
+        aws-region           :  ${{ env.AWS_REGION_NAME }}
+        
+    - name: Create new ElasticBeanstalk Application Version
+      run : |
+        aws elasticbeanstalk create-application-version \
+        --application-name ${{ env.EB_APPLICATION_NAME }} \
+        --source-bundle S3Bucket="${{ env.EB_PACKAGE_S3_BUCKET_NAME }}",S3Key="${{ env.DEPLOY_PACKAGE_NAME }}" \
+        --version-label "Ver-${{ github.sha }}" \
+        --description "CoimmitSHA-${{ github.sha }}"
+      
+    - name: Deploy new ElasticBeanstalk Application Version
+      run : aws elasticbeanstalk update-environment --environment-name ${{ env.EB_ENVIROMENT_NAME }} --version-label "Ver-${{ github.sha }}"
