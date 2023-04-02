@@ -1,0 +1,30 @@
+name: First-CI/CD-Action-Elastic-Beanstoalk
+
+env:
+  EB_PACKAGE_S3_BUCKET_NAME: "bkukl-github-actions"
+  EB_APPLICATION_NAME      : "MyFlask"
+  EB_ENVIROMENT_NAME       : "MyFlask-env"
+  DEPLOY_PACKAGE_NAME      : "flask_app${{ github.sha }}.zip"
+  AWS_REGION_NAME          : "eu-centraal-1"
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  build:
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Git clone repo
+    - uses: actions/checkout@v2
+    
+    - name:  Create zip deployment package
+      run : zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
+      
+    
+    
+    
+    
