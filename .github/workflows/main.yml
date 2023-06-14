@@ -31,15 +31,30 @@ jobs:
     steps:
       - name: Request approval
         id: approval
-        uses: peter-evans/approval-action@v2.3.0
+        uses: actions/github-script@v5
+        env:
+          REVIEWERS: username1, username2 # Add GitHub usernames of reviewers
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          message: "Please approve the deployment"
-          reviewers: bohdanhub # Add GitHub usernames of reviewers
+          script: |
+            const { context, github } = require('@actions/github');
+            const reviewers = process.env.REVIEWERS.split(',').map(username => username.trim());
+            const pullRequest = context.payload.pull_request;
 
-      - name: Check approval status
-        run: |
-          echo "Approval status: ${{ steps.approval.outputs.approved }}"
-          echo "Approved by: ${{ steps.approval.outputs.approved-by }}"
-          # You can use the outputs from the approval action for further processing
+            async function requestApproval() {
+              try {
+                const response = await github.pulls.createReviewRequest({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pullRequest.number,
+                  reviewers
+                });
+
+                console.log(`Approval requested successfully: ${response.status}`);
+              } catch (error) {
+                console.error(`Error requesting approval: ${error.message}`);
+                process.exit(1);
+              }
+            }
+
+            requestApproval();
 
